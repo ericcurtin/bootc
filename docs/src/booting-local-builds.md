@@ -38,7 +38,7 @@ $ bootc switch --transport containers-storage quay.io/fedora/fedora-bootc:40
 ### Docker Support
 
 If you're using Docker instead of Podman, bootc will automatically
-detect Docker and fall back to using the Docker daemon. The same
+detect Docker and switch to using the `docker-daemon` transport. The same
 command works seamlessly:
 
 ```
@@ -47,7 +47,7 @@ $ bootc switch --transport containers-storage <image-id-or-name>
 
 When Docker is running and Podman's containers-storage is not accessible,
 bootc will automatically use the `docker-daemon` transport as a fallback.
-You can also explicitly use the Docker daemon transport:
+You can also explicitly specify the Docker daemon transport:
 
 ```
 $ bootc switch --transport docker-daemon <image-id-or-name>
