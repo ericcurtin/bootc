@@ -517,6 +517,7 @@ mod tests {
             Transport::ContainerStorage,
             Transport::OciArchive,
             Transport::DockerArchive,
+            Transport::DockerDaemon,
             Transport::OciDir,
         ] {
             assert_eq!(Transport::try_from(v.serializable_name()).unwrap(), v);
@@ -527,6 +528,7 @@ mod tests {
     const VALID_IRS: &[&str] = &[
         "containers-storage:localhost/someimage",
         "docker://quay.io/exampleos/blah:sometag",
+        "docker-daemon:myimage:latest",
     ];
 
     #[test]
@@ -575,6 +577,11 @@ mod tests {
                 s: "containers-storage:localhost/someimage:blah",
                 transport: Transport::ContainerStorage,
                 name: "localhost/someimage:blah",
+            },
+            Case {
+                s: "docker-daemon:myimage:latest",
+                transport: Transport::DockerDaemon,
+                name: "myimage:latest",
             },
         ] {
             let ir: ImageReference = case.s.try_into().unwrap();
