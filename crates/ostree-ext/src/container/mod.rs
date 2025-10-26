@@ -62,6 +62,8 @@ pub enum Transport {
     OciArchive,
     /// A local Docker archive tarball (`docker-archive:`)
     DockerArchive,
+    /// Docker daemon (`docker-daemon:`)
+    DockerDaemon,
     /// Local container storage (`containers-storage:`)
     ContainerStorage,
     /// Local directory (`dir:`)
@@ -112,6 +114,7 @@ impl TryFrom<&str> for Transport {
             Self::OCI_STR => Self::OciDir,
             Self::OCI_ARCHIVE_STR => Self::OciArchive,
             Self::DOCKER_ARCHIVE_STR => Self::DockerArchive,
+            Self::DOCKER_DAEMON_STR => Self::DockerDaemon,
             Self::CONTAINERS_STORAGE_STR => Self::ContainerStorage,
             Self::LOCAL_DIRECTORY_STR => Self::Dir,
             o => return Err(anyhow!("Unknown transport '{}'", o)),
@@ -123,6 +126,7 @@ impl Transport {
     const OCI_STR: &'static str = "oci";
     const OCI_ARCHIVE_STR: &'static str = "oci-archive";
     const DOCKER_ARCHIVE_STR: &'static str = "docker-archive";
+    const DOCKER_DAEMON_STR: &'static str = "docker-daemon";
     const CONTAINERS_STORAGE_STR: &'static str = "containers-storage";
     const LOCAL_DIRECTORY_STR: &'static str = "dir";
     const REGISTRY_STR: &'static str = "registry";
@@ -134,6 +138,7 @@ impl Transport {
             Transport::OciDir => Self::OCI_STR,
             Transport::OciArchive => Self::OCI_ARCHIVE_STR,
             Transport::DockerArchive => Self::DOCKER_ARCHIVE_STR,
+            Transport::DockerDaemon => Self::DOCKER_DAEMON_STR,
             Transport::ContainerStorage => Self::CONTAINERS_STORAGE_STR,
             Transport::Dir => Self::LOCAL_DIRECTORY_STR,
         }
@@ -255,6 +260,7 @@ impl std::fmt::Display for Transport {
             Self::Registry => "docker://",
             Self::OciArchive => "oci-archive:",
             Self::DockerArchive => "docker-archive:",
+            Self::DockerDaemon => "docker-daemon:",
             Self::OciDir => "oci:",
             Self::ContainerStorage => "containers-storage:",
             Self::Dir => "dir:",
@@ -470,6 +476,18 @@ pub fn version_for_config(config: &oci_spec::image::ImageConfiguration) -> Optio
         }
     }
     None
+}
+
+/// Check if Docker daemon is available by checking for the socket.
+/// Returns true if the Docker daemon socket exists and is accessible.
+pub fn is_docker_daemon_available() -> bool {
+    // Check common Docker socket locations
+    for socket_path in ["/var/run/docker.sock", "/run/docker.sock"] {
+        if std::path::Path::new(socket_path).exists() {
+            return true;
+        }
+    }
+    false
 }
 
 pub mod deploy;
