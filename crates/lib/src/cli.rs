@@ -998,7 +998,12 @@ async fn upgrade(
 }
 
 pub(crate) fn imgref_for_switch(opts: &SwitchOpts) -> Result<ImageReference> {
-    let transport = ostree_container::Transport::try_from(opts.transport.as_str())?;
+    // Special handling for "docker" transport which should map to Docker daemon transport
+    let transport = if opts.transport.as_str() == "docker-daemon" {
+        ostree_container::Transport::DockerDaemon
+    } else {
+        ostree_container::Transport::try_from(opts.transport.as_str())?
+    };
     let imgref = ostree_container::ImageReference {
         transport,
         name: opts.target.to_string(),
