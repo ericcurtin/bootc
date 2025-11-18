@@ -112,6 +112,8 @@ impl TryFrom<&str> for Transport {
         Ok(match value {
             Self::DOCKER_DAEMON_STR => Self::DockerDaemon,
             Self::REGISTRY_STR => Self::Registry,
+            // "docker" is an alias for "registry" to support docker:// prefix
+            "docker" => Self::Registry,
             Self::OCI_STR => Self::OciDir,
             Self::OCI_ARCHIVE_STR => Self::OciArchive,
             Self::DOCKER_ARCHIVE_STR => Self::DockerArchive,
