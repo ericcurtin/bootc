@@ -381,6 +381,41 @@ pub(crate) async fn prepare_for_pull(
     imgref: &ImageReference,
     target_imgref: Option<&OstreeImageReference>,
 ) -> Result<PreparedPullResult> {
+    // Try the original image reference first
+    match prepare_for_pull_impl(repo, imgref, target_imgref).await {
+        Ok(result) => Ok(result),
+        Err(e) => {
+            // If this was a containers-storage transport and Docker is available, try docker-daemon
+            if imgref.transport == "containers-storage"
+                && ostree_container::is_docker_daemon_available()
+            {
+                tracing::debug!(
+                    "containers-storage failed, trying docker-daemon fallback: {}",
+                    e
+                );
+                // Create a new image reference with docker-daemon transport
+                let docker_imgref = ImageReference {
+                    image: imgref.image.clone(),
+                    transport: "docker-daemon".to_string(),
+                    signature: imgref.signature.clone(),
+                };
+                tracing::info!(
+                    "Falling back to docker-daemon transport for image: {}",
+                    imgref.image
+                );
+                prepare_for_pull_impl(repo, &docker_imgref, target_imgref).await
+            } else {
+                Err(e)
+            }
+        }
+    }
+}
+
+async fn prepare_for_pull_impl(
+    repo: &ostree::Repo,
+    imgref: &ImageReference,
+    target_imgref: Option<&OstreeImageReference>,
+) -> Result<PreparedPullResult> {
     let imgref_canonicalized = imgref.clone().canonicalize()?;
     tracing::debug!("Canonicalized image reference: {imgref_canonicalized:#}");
     let ostree_imgref = &OstreeImageReference::from(imgref_canonicalized);
